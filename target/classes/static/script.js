@@ -10,6 +10,9 @@ let selectedBusRoute = null;
 let ws = null;
 let currentUser = null;
 let userLocation = null;
+let currentPathToStop = null;
+let nearestStopMarker = null;
+let routingControl = null;
 
 // Initialize particles background
 function initParticles() {
@@ -356,76 +359,167 @@ function getUserLocation() {
     );
 }
 
-// Send user location to server via WebSocket
-function sendUserLocation(lat, lng) {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        const message = {
-            type: 'user-location',
-            data: {
-                coords: [lat, lng],
-                timestamp: Date.now()
-            }
-        };
-        ws.send(JSON.stringify(message));
-    }
-}
+
 
 // Load and display bus routes with fresh colors
 function loadBusRoutes() {
     if (!trackingMap) return;
 
     const routes = {
-        "1": {
-            name: "Ranjangaon Phata",
-            path: [
-                [19.851408, 75.209897],
-                [19.840466, 75.232433],
-                [19.845526, 75.240380],
-                [19.838546, 75.251527],
-                [19.837301, 75.253563],
-                [19.847091, 75.265890],
-                [19.832842, 75.270292],
-                [19.827377, 75.289950],
-                [19.832516, 75.290357]
-            ],
-            color: '#ff6b6b',
-            stops: [
-                { name: "Ranjangaon Phata", coords: [19.875743, 75.334755] },
-                { name: "Alphonsa", coords: [19.840466, 75.232433] },
-                { name: "Pratap Chowk", coords: [19.839425, 75.241251] },
-                { name: "MIDC RD", coords: [19.838546, 75.251527] },
-                { name: "Gollwadi Chowk", coords: [19.847091, 75.265890] },
-                { name: "Paithan RD", coords: [19.827377, 75.289950] },
-                { name: "CSMSS", coords: [19.832516, 75.290357] }
-            ]
-        },
+"1": {
+    name: "Harsul t,point to Csmss college",
+    path: [
+        [19.83253681483603, 75.29043365981501],
+        [19.83341867846705, 75.29048568252132],
+        [19.83545011799008, 75.29206138806062],
+        [19.83734651194447, 75.29236146398863],
+        [19.83873183684019, 75.2925903271297],
+        [19.84285287402733, 75.29322724566526],
+        [19.84468356620371, 75.29444799544524],
+        [19.84667706215674, 75.29463815658494],
+        [19.84787376336374, 75.29666519701549],
+        [19.86127185576102, 75.3070330890779],
+        [19.86094604268669, 75.31019683092944],
+        [19.86955028334207, 75.31225875519746],
+        [19.87651901726746, 75.31712996224708],
+        [19.88157695314591, 75.31761273158502],
+        [19.88414221501092, 75.31718918183617],
+        [19.88762132653282, 75.3204123125509],
+        [19.89054244155257, 75.32156126453295],
+        [19.89119786081724, 75.32222794091739],
+        [19.89190929469798, 75.32540114141526],
+        [19.89231445373854, 75.32840299354088],
+        [19.89326257913964, 75.32933341206237],
+        [19.89322989703486, 75.33163885267477],
+        [19.89434722705892, 75.33467361323066],
+        [19.89414944955452, 75.33717747091215],
+        [19.89656112452172, 75.33747043665575],
+        [19.90520354370145, 75.34261288712844],
+        [19.91284184704634, 75.34917687942682],
+        [19.91489372986223, 75.35246186091891]
+    ],
+    color: '#1c92eb',
+    stops: [
+               { name: "Csmss college", coords: [19.83253681483603, 75.29043365981501] },
+               { name: "Hudico corner", coords: [19.90965254287012, 75.34628072302766] },
+               { name: "Collector office", coords: [19.89431393518074, 75.33729288190757] },
+               { name: "Mill corner", coords: [19.88402875484406, 75.31706712485533] },
+               { name: "Baba petrol pump", coords: [19.8738334732043, 75.31554731002528] },
+               { name: "Railway station", coords: [19.86111970411336, 75.31022282226043] },
+               { name: "Dhule-Solapur highway", coords: [19.85490610933454, 75.30237099822557] },
+               { name: "Harsul T point ", coords: [19.91489372986223, 75.35246186091891] }
+           ]
+},
+
         "2": {
             name: "Fame Tapadia Signal",
-            path: [
-                [19.883575, 75.365027],
-                [19.894559, 75.365062],
-                [19.895284, 75.364767],
-                [19.898180, 75.362212],
-                [19.904718, 75.357021],
-                [19.909854, 75.353163],
-                [19.914915, 75.352384],
-                [19.906784, 75.343839],
-                [19.904839, 75.342060],
-                [19.894397, 75.337078],
-                [19.892250, 75.327619],
-                [19.884206, 75.317144],
-                [19.832545, 75.290382]
+            path:
+            [
+                              [19.86936646701711, 75.39632256251001],
+                              [19.870611879497, 75.39080178044756],
+                              [19.87146529078089, 75.38745659019966],
+                              [19.87216114774766, 75.38265369697324],
+                              [19.87225005031377, 75.37708618391231],
+                              [19.87408976024522, 75.36563879717801],
+                              [19.8747413175669, 75.36229225120753],
+                              [19.87487511786902, 75.35564886462205],
+                              [19.8763785526522, 75.34565907432639],
+                              [19.87541008177487, 75.3362910685772],
+                              [19.8753199061867, 75.33495277435907],
+                              [19.87331838306769, 75.32857296684109],
+                              [19.87219392328148, 75.32563303176121],
+                              [19.87205852069712, 75.32269327142923],
+                              [19.87396779635687, 75.31542643778187],
+                              [19.87446166837491, 75.31141116387577],
+                              [19.87695562494967, 75.30483788382271],
+                              [19.87711282179161, 75.30397732253373],
+                              [19.87596564722558, 75.30079871633696]
             ],
-            color: '#4ecdc4',
+            color: '#1c92eb',
             stops: [
-                { name: "Fame Tapadia Signal", coords: [19.876796, 75.366045] },
-                { name: "N1 Ganpati", coords: [19.883883, 75.365047] },
-                { name: "Wokhardt", coords: [19.895284, 75.364767] },
-                { name: "Ambedkar Chowk", coords: [19.898180, 75.362212] },
-                { name: "Railway Station", coords: [19.861054, 75.310145] },
-                { name: "CSMSS", coords: [19.832545, 75.290382] }
-            ]
-        }
+                       { name: 'Fame Tapadia Signal', coords: [19.86971570872217, 75.39514179647698] },
+                       { name: 'N1 Ganpati ', coords: [19.87230727333787, 75.37588314921581] },
+                       { name: ' Wokhardt ', coords: [19.87389490107866, 75.36689875963823] },
+                       { name: 'Ambedkar Chowk', coords: [19.87527134017097, 75.35235331030567] },
+                       { name: 'Jaiswal Hall ', coords: [19.87576379041766, 75.33946849733468] },
+                       { name: ' SBOA ', coords: [19.87332246553949, 75.32844657676995] },
+                       { name: ' T. Point ', coords: [19.87213261517093, 75.32248160270399] },
+                       { name: 'Power House ', coords: [19.8739295312812, 75.31534864403808] },
+                       { name: 'Nagar Naka ', coords: [19.87609014058089, 75.3008869356705] }
+                   ]
+        },
+
+        "3": {
+                    name: "Chikalthana",
+                    path: [
+                        [19.873573, 75.394782],
+                        [19.869982, 75.394397],
+                        [19.871974, 75.385324],
+                        [19.873522, 75.370390],
+                        [19.874840, 75.355761],
+                        [19.875275, 75.352356],
+                        [19.876049, 75.341475],
+                        [19.873642, 75.328705],
+                        [19.872266, 75.322000],
+                        [19.860902, 75.310143],
+                        [19.861369, 75.306988],
+                        [19.847678, 75.296336],
+                        [19.833201, 75.290463]
+                    ],
+                    color: '#ff6b6b',
+                    stops: [
+                                { name: 'Chikalthana', coords: [19.873573, 75.394782] },
+                                { name: ' Dhoot Hospita', coords: [19.869982, 75.394397] },
+                                { name: ' Ram Nagar', coords: [19.871974, 75.385324] },
+                                { name: 'API Corner', coords: [19.873522, 75.370390] },
+                                { name: 'Ramgiri Hotel', coords: [19.874840, 75.355761] },
+                                { name: ' Seven Hills', coords: [19.875275, 75.352356] },
+                                { name: 'Akashwani', coords: [19.876049, 75.341475] },
+                                { name: 'Mondha Naka', coords: [19.873642, 75.328705] },
+                                { name: ' Amarpreet', coords: [19.872266, 75.322000] },
+                                { name: 'Kranti Chowk', coords: [19.872266, 75.322000] },
+                                { name: ' Gopal T', coords: [19.860902, 75.310143] },
+                                { name: ' Jai Tower', coords: [19.861369, 75.306988] },
+                                { name: ' Padampura', coords: [19.847678, 75.296336] },
+                                { name: ' csmss', coords: [19.833201, 75.290463] },
+                            ]
+                },
+
+                "4": {
+                                    name: "Baliram Patil High School",
+                                    path: [
+                                        [19.895877, 75.358173],
+                                        [19.888110, 75.360340],
+                                        [19.879980, 75.360448],
+                                        [19.883450420753835, 75.35381853503729],
+                                        [19.875295, 75.353286],
+                                        [19.869060, 75.350870],
+                                        [19.858987, 75.344975],
+                                        [19.857757, 75.334539],
+                                        [19.850451, 75.333036],
+                                        [19.854130, 75.305745],
+                                        [19.854687, 75.302286],
+                                        [19.841854, 75.293056],
+                                        [19.832519, 75.290360]
+                                    ],
+                                    color: '#ff6b6b',
+                                    stops: [
+                                                { name: ' Baliram Patil High School', coords: [19.895877, 75.358173] },
+                                                { name: ' Bajrang Chowk RD', coords: [19.888110, 75.360340] },
+                                                { name: ' Chistiya Chowk RD', coords: [19.879980, 75.360448] },
+                                                { name: ' Central Naka RD', coords: [19.883450420753835, 75.35381853503729] },
+                                                { name: ' Seven Hills Signal', coords: [19.875295, 75.353286] },
+                                                { name: ' Gajanan Mandir', coords: [19.869060, 75.350870] },
+                                                { name: ' Reliance Mall', coords: [19.865591, 75.349258] },
+                                                { name: ' suthgirni showk RD', coords: [19.858987, 75.344975] },
+                                                { name: ' Shivaji Nagar RD', coords: [19.857757, 75.334539] },
+                                                { name: ' Darga RD', coords: [19.850451, 75.333036] },
+                                                { name: ' Dhule- Solapur Hwy', coords: [19.854130, 75.305745] },
+                                                { name: ' Dhule- Solapur Hwy Corner', coords: [19.854687, 75.302286] },
+                                                { name: ' Jai Shriram Square', coords: [19.841854, 75.293056] },
+                                                { name: ' CSMSS', coords: [19.832519, 75.290360] }
+                                            ]
+                                },
     };
 
     // Store routes but don't display initially
@@ -440,11 +534,11 @@ function generateBusList() {
 
     // Default buses (will be updated with real data from WebSocket)
     const defaultBuses = [
-        { id: 'bus-1', route: 'Route 1: Ranjangaon Phata', routeId: '1', status: 'Active', nextStop: 'Alphonsa' },
-        { id: 'bus-2', route: 'Route 1: Ranjangaon Phata', routeId: '1', status: 'Active', nextStop: 'MIDC RD' },
-        { id: 'bus-3', route: 'Route 2: Fame Tapadia Signal', routeId: '2', status: 'Active', nextStop: 'Wokhardt' },
-        { id: 'bus-4', route: 'Route 2: Fame Tapadia Signal', routeId: '2', status: 'Active', nextStop: 'Railway Station' },
-        { id: 'bus-5', route: 'Route 1: Ranjangaon Phata', routeId: '1', status: 'Active', nextStop: 'Pratap Chowk' }
+        { id: 'bus-1', route: 'Route 1: Harsul', routeId: '1', status: 'Active', nextStop: 'Hudico corner' },
+        { id: 'bus-2', route: 'Route 1: Ambedkar Chowk', routeId: '1', status: 'Active', nextStop: 'Bai' },
+        { id: 'bus-3', route: 'Route 2: Chikalthana', routeId: '2', status: 'Active', nextStop: 'Wokhardt' },
+        { id: 'bus-4', route: 'Route 2: Mahalaxmi Chowk', routeId: '2', status: 'Active', nextStop: 'Railway Station' },
+        { id: 'bus-5', route: 'Route 1: Baliram Patil High School', routeId: '1', status: 'Active', nextStop: 'Pratap Chowk' }
     ];
 
     busList.innerHTML = '';
@@ -734,23 +828,92 @@ function updateBusCardStatus(busId, status, lastSeen) {
         console.error('Error establishing WebSocket connection:', error);
     }
 }
+// Add these functions to your existing script.js
 
-// Handle WebSocket messages
+// Request ETA for a specific bus
+function requestBusETA(busId) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.error('WebSocket not connected');
+        return;
+    }
+
+    if (!userLocation) {
+        console.error('User location not available');
+        showNotification('Please enable location services to see ETA');
+        return;
+    }
+
+    const message = {
+        type: 'request-eta',
+        data: {
+            busId: busId,
+            coords: [userLocation.lat, userLocation.lng]
+        }
+    };
+
+    ws.send(JSON.stringify(message));
+}
+
+// Request ETA for all buses
+function requestAllBusETAs() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.error('WebSocket not connected');
+        return;
+    }
+
+    if (!userLocation) {
+        console.error('User location not available');
+        return;
+    }
+
+    const message = {
+        type: 'request-eta',
+        data: {
+            coords: [userLocation.lat, userLocation.lng]
+        }
+    };
+
+    ws.send(JSON.stringify(message));
+}
+
+// Update handleWebSocketMessage to include ETA responses
 function handleWebSocketMessage(message) {
     switch (message.type) {
         case 'user-registered':
             console.log('User registered successfully:', message.data);
+            // Request initial ETAs
+            setTimeout(() => requestAllBusETAs(), 1000);
             break;
 
         case 'active-buses':
             if (message.data) {
                 updateBusLocations(message.data);
+                // Request ETAs for all active buses
+                requestAllBusETAs();
             }
             break;
 
         case 'bus-location-update':
             if (message.data) {
                 updateSingleBusLocation(message.data);
+            }
+            break;
+
+        case 'bus-location-update-with-eta':  // NEW
+            if (message.data) {
+                updateBusLocationWithETA(message.data);
+            }
+            break;
+
+        case 'eta-response':  // NEW
+            if (message.data) {
+                displayBusETA(message.data);
+            }
+            break;
+
+        case 'all-etas-response':  // NEW
+            if (message.data) {
+                updateAllBusETAs(message.data);
             }
             break;
 
@@ -766,12 +929,121 @@ function handleWebSocketMessage(message) {
         case 'tracking-started':
             console.log('Tracking started:', message.data);
             showNotification(`Now tracking ${message.data.busId}`);
+            requestBusETA(message.data.busId);
             break;
 
         default:
             console.log('Unknown message type:', message.type);
     }
 }
+
+// Update bus location with ETA
+function updateBusLocationWithETA(busData) {
+    if (busData.coords && busData.coords.length >= 2) {
+        const [lat, lng] = busData.coords;
+        const busId = busData.busId;
+        const etaInfo = busData.eta;
+
+        if (busMarkers[busId]) {
+            busMarkers[busId].setLatLng([lat, lng]);
+
+            // Update popup with ETA
+            if (etaInfo && etaInfo.available) {
+                busMarkers[busId].setPopupContent(`
+                    <div style="text-align: center; font-weight: 600;">
+                        <strong style="color: #ff6b6b;">${busId.toUpperCase()}</strong><br>
+                        <span style="color: #2d3748;">Driver: ${busData.driverId || 'Unknown'}</span><br>
+                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #e5e7eb;">
+                        <div style="background: linear-gradient(135deg, #4ecdc4, #44a08d); color: white; padding: 8px; border-radius: 8px; margin: 8px 0;">
+                            <i class="fas fa-clock"></i> <strong>ETA: ${etaInfo.formattedETA}</strong><br>
+                            <small>📍 Distance: ${etaInfo.distanceKm} km</small>
+                        </div>
+                        <small style="color: #718096;">Last update: ${new Date().toLocaleTimeString()}</small>
+                    </div>
+                `);
+            }
+        } else {
+            updateBusLocations([busData]);
+        }
+
+        // Update bus card with ETA
+        if (etaInfo && etaInfo.available) {
+            updateBusCardWithETA(busId, etaInfo);
+        }
+    }
+}
+
+// Display ETA for a specific bus
+function displayBusETA(etaInfo) {
+    if (!etaInfo.available) {
+        showNotification('ETA not available for this bus');
+        return;
+    }
+
+    const busId = etaInfo.busId;
+    updateBusCardWithETA(busId, etaInfo);
+
+    // Show notification with ETA
+    showNotification(`Bus ${busId.toUpperCase()}: ${etaInfo.formattedETA} away (${etaInfo.distanceKm} km)`);
+}
+
+// Update all bus cards with ETAs
+function updateAllBusETAs(etaList) {
+    if (!Array.isArray(etaList)) return;
+
+    etaList.forEach(etaInfo => {
+        if (etaInfo.available) {
+            updateBusCardWithETA(etaInfo.busId, etaInfo);
+        }
+    });
+}
+
+// Update bus card with ETA information
+function updateBusCardWithETA(busId, etaInfo) {
+    const busCard = document.querySelector(`[data-bus-id="${busId}"]`);
+    if (!busCard) return;
+
+    const nextStopElement = busCard.querySelector('.bus-next-stop');
+    if (nextStopElement) {
+        nextStopElement.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="background: linear-gradient(135deg, #4ecdc4, #44a08d); color: white; padding: 4px 12px; border-radius: 12px; font-weight: 600;">
+                    <i class="fas fa-clock"></i> ${etaInfo.formattedETA}
+                </span>
+                <span style="color: var(--text-secondary);">
+                    📍 ${etaInfo.distanceKm} km away
+                </span>
+            </div>
+        `;
+    }
+}
+
+// Auto-refresh ETAs every 15 seconds
+setInterval(() => {
+    if (userLocation && ws && ws.readyState === WebSocket.OPEN) {
+        requestAllBusETAs();
+    }
+}, 15000);
+
+// Request ETAs when user location changes
+function sendUserLocation(lat, lng) {
+    userLocation = { lat, lng };
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const message = {
+            type: 'user-location',
+            data: {
+                coords: [lat, lng],
+                timestamp: Date.now()
+            }
+        };
+        ws.send(JSON.stringify(message));
+
+        // Request ETAs for new location
+        setTimeout(() => requestAllBusETAs(), 500);
+    }
+}
+
 
 // Update single bus location
 function updateSingleBusLocation(busData) {
@@ -922,6 +1194,424 @@ function filterBusByRoute(routeId) {
     });
 }
 
+async function showPathToNearestStop(routeId) {
+    if (!trackingMap || !userLocation) {
+        showNotification('Please enable location services to see the path');
+        return;
+    }
+
+    try {
+        // Clear any existing path
+        clearPathToStop();
+
+        // Find nearest stop on the selected route
+        const response = await fetch('/api/route-path/nearest-stop', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                routeId: routeId,
+                userLat: userLocation.lat,
+                userLng: userLocation.lng
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to find nearest stop');
+        }
+
+        const nearestStopData = await response.json();
+
+        if (!nearestStopData || !nearestStopData.stop) {
+            showNotification('No stops found on this route');
+            return;
+        }
+
+        const stopCoords = nearestStopData.stop.coords;
+        const stopName = nearestStopData.stop.name;
+        const distanceMeters = nearestStopData.distance;
+        const walkingTime = nearestStopData.walkingTime;
+
+        // Create routing using Leaflet Routing Machine for realistic paths
+        await createRealisticRoute(
+            userLocation.lat,
+            userLocation.lng,
+            stopCoords[0],
+            stopCoords[1],
+            stopName,
+            distanceMeters,
+            walkingTime
+        );
+
+        // Add marker at nearest stop
+        addNearestStopMarker(stopCoords, stopName, distanceMeters, walkingTime);
+
+        // Show info panel
+        showRouteInfoPanel(nearestStopData);
+
+        // Zoom to show both user and stop
+        const bounds = L.latLngBounds(
+            [userLocation.lat, userLocation.lng],
+            [stopCoords[0], stopCoords[1]]
+        );
+        trackingMap.fitBounds(bounds, { padding: [50, 50] });
+
+    } catch (error) {
+        console.error('Error showing path to stop:', error);
+        showNotification('Could not calculate path to bus stop');
+    }
+}
+
+/**
+ * Create realistic routing using OSRM (Open Source Routing Machine)
+ * This provides actual road-based routing with turns and curves
+ */
+async function createRealisticRoute(startLat, startLng, endLat, endLng, stopName, distance, walkingTime) {
+    try {
+        // Use OSRM API for realistic routing
+        const osrmUrl = `https://router.project-osrm.org/route/v1/foot/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true`;
+
+        const response = await fetch(osrmUrl);
+        const data = await response.json();
+
+        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+            const route = data.routes[0];
+            const coordinates = route.geometry.coordinates;
+
+            // Convert coordinates from [lng, lat] to [lat, lng] for Leaflet
+            const latLngs = coordinates.map(coord => [coord[1], coord[0]]);
+
+            // Create animated, highlighted path
+            currentPathToStop = L.polyline(latLngs, {
+                color: '#FF1744',  // Bright red/pink
+                weight: 8,
+                opacity: 0.9,
+                dashArray: '20, 15',
+                lineCap: 'round',
+                lineJoin: 'round',
+                className: 'animated-path'
+            }).addTo(trackingMap);
+
+            // Add glow effect
+            L.polyline(latLngs, {
+                color: '#FF6B9D',
+                weight: 12,
+                opacity: 0.4,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(trackingMap);
+
+            // Animate the path
+            animatePath(currentPathToStop);
+
+            // Add turn-by-turn markers
+            if (route.legs && route.legs[0] && route.legs[0].steps) {
+                addTurnMarkers(route.legs[0].steps);
+            }
+
+            // Show distance and duration from OSRM
+            const routeDistance = Math.round(route.distance);
+            const routeDuration = Math.round(route.duration / 60);
+
+            showNotification(
+                `📍 Path to ${stopName}: ${routeDistance}m (${routeDuration} min walk)`
+            );
+
+            // Bind popup to path
+            currentPathToStop.bindPopup(`
+                <div style="text-align: center; font-weight: 600;">
+                    <strong style="color: #FF1744;">🚶 Walking Route</strong><br>
+                    <small>To: ${stopName}</small><br>
+                    <hr style="margin: 5px 0;">
+                    <strong>${routeDistance} meters</strong><br>
+                    <small>≈ ${routeDuration} minutes walk</small>
+                </div>
+            `);
+
+        } else {
+            // Fallback to straight line if routing fails
+            createFallbackRoute(startLat, startLng, endLat, endLng, stopName, distance, walkingTime);
+        }
+
+    } catch (error) {
+        console.error('Routing error:', error);
+        // Fallback to straight line
+        createFallbackRoute(startLat, startLng, endLat, endLng, stopName, distance, walkingTime);
+    }
+}
+
+/**
+ * Fallback route (straight line) if OSRM fails
+ */
+function createFallbackRoute(startLat, startLng, endLat, endLng, stopName, distance, walkingTime) {
+    currentPathToStop = L.polyline([
+        [startLat, startLng],
+        [endLat, endLng]
+    ], {
+        color: '#FF1744',
+        weight: 6,
+        opacity: 0.8,
+        dashArray: '15, 10',
+        lineCap: 'round'
+    }).addTo(trackingMap);
+
+    animatePath(currentPathToStop);
+
+    currentPathToStop.bindPopup(`
+        <div style="text-align: center; font-weight: 600;">
+            <strong style="color: #FF1744;">🚶 Direct Path</strong><br>
+            <small>To: ${stopName}</small><br>
+            <hr style="margin: 5px 0;">
+            <strong>${distance} meters</strong><br>
+            <small>≈ ${walkingTime} minutes walk</small>
+        </div>
+    `);
+}
+
+/**
+ * Animate the path with a moving dash effect
+ */
+function animatePath(polyline) {
+    let offset = 0;
+
+    setInterval(() => {
+        offset = (offset + 1) % 35;
+        if (polyline && polyline._path) {
+            polyline._path.style.strokeDashoffset = offset;
+        }
+    }, 100);
+}
+
+/**
+ * Add turn-by-turn direction markers
+ */
+function addTurnMarkers(steps) {
+    const importantManeuvers = ['turn', 'merge', 'fork', 'roundabout'];
+
+    steps.forEach((step, index) => {
+        if (index === 0 || index === steps.length - 1) return; // Skip start/end
+
+        const maneuver = step.maneuver;
+        if (maneuver && importantManeuvers.some(m => maneuver.type.includes(m))) {
+            const coords = maneuver.location;
+
+            L.circleMarker([coords[1], coords[0]], {
+                radius: 6,
+                fillColor: '#FFF',
+                color: '#FF1744',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            }).addTo(trackingMap).bindPopup(`
+                <small><strong>${maneuver.modifier || maneuver.type}</strong></small>
+            `);
+        }
+    });
+}
+
+/**
+ * Add marker at the nearest bus stop
+ */
+function addNearestStopMarker(coords, name, distance, walkingTime) {
+    if (nearestStopMarker) {
+        trackingMap.removeLayer(nearestStopMarker);
+    }
+
+    const icon = L.divIcon({
+        className: 'nearest-stop-marker',
+        html: `
+            <div style="
+                background: linear-gradient(135deg, #FF1744, #F50057);
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 4px solid white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 16px;
+                box-shadow: 0 4px 15px rgba(255, 23, 68, 0.5);
+                animation: bounce 2s infinite;
+            ">🚏</div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    });
+
+    nearestStopMarker = L.marker(coords, { icon: icon })
+        .addTo(trackingMap)
+        .bindPopup(`
+            <div style="text-align: center; min-width: 200px;">
+                <strong style="color: #FF1744; font-size: 16px;">🚏 Nearest Stop</strong><br>
+                <strong style="font-size: 14px;">${name}</strong><br>
+                <hr style="margin: 8px 0; border: none; border-top: 2px solid #FF1744;">
+                <div style="display: flex; justify-content: space-around; margin-top: 8px;">
+                    <div>
+                        <strong style="color: #FF1744;">${distance}m</strong><br>
+                        <small>Distance</small>
+                    </div>
+                    <div>
+                        <strong style="color: #FF1744;">~${walkingTime} min</strong><br>
+                        <small>Walking</small>
+                    </div>
+                </div>
+            </div>
+        `);
+
+    nearestStopMarker.openPopup();
+}
+
+/**
+ * Show route information panel
+ */
+function showRouteInfoPanel(stopData) {
+    // Remove existing panel if any
+    const existingPanel = document.getElementById('route-info-panel');
+    if (existingPanel) {
+        existingPanel.remove();
+    }
+
+    const panel = document.createElement('div');
+    panel.id = 'route-info-panel';
+    panel.className = 'route-info-panel';
+    panel.innerHTML = `
+        <div class="panel-header">
+            <h3>📍 Nearest Stop: ${stopData.stop.name}</h3>
+            <button class="close-panel" onclick="clearPathToStop()">✕</button>
+        </div>
+        <div class="panel-content">
+            <div class="info-item">
+                <span class="info-icon">📏</span>
+                <span class="info-label">Distance:</span>
+                <span class="info-value">${stopData.distance} meters (${stopData.distanceKm} km)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">🚶</span>
+                <span class="info-label">Walking Time:</span>
+                <span class="info-value">~${stopData.walkingTime} minutes</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">🚌</span>
+                <span class="info-label">Route:</span>
+                <span class="info-value">${stopData.routeName}</span>
+            </div>
+        </div>
+        <button class="navigate-btn" onclick="openInMaps(${stopData.stop.coords[0]}, ${stopData.stop.coords[1]}, '${stopData.stop.name}')">
+            🗺️ Open in Maps
+        </button>
+    `;
+
+    document.body.appendChild(panel);
+
+    // Animate panel entry
+    setTimeout(() => {
+        panel.classList.add('show');
+    }, 100);
+}
+
+/**
+ * Clear the path and markers
+ */
+function clearPathToStop() {
+    if (currentPathToStop) {
+        trackingMap.removeLayer(currentPathToStop);
+        currentPathToStop = null;
+    }
+
+    if (nearestStopMarker) {
+        trackingMap.removeLayer(nearestStopMarker);
+        nearestStopMarker = null;
+    }
+
+    // Remove info panel
+    const panel = document.getElementById('route-info-panel');
+    if (panel) {
+        panel.classList.remove('show');
+        setTimeout(() => panel.remove(), 300);
+    }
+
+    // Remove all turn markers (circles)
+    trackingMap.eachLayer(layer => {
+        if (layer instanceof L.CircleMarker) {
+            trackingMap.removeLayer(layer);
+        }
+    });
+}
+
+/**
+ * Open location in external maps app
+ */
+function openInMaps(lat, lng, name) {
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${encodeURIComponent(name)}`;
+    window.open(mapsUrl, '_blank');
+}
+
+/**
+ * Update the trackBus function to include path showing
+ */
+const originalTrackBus = window.trackBus;
+window.trackBus = function(busId, routeId) {
+    // Call original function
+    if (originalTrackBus) {
+        originalTrackBus(busId, routeId);
+    }
+
+    // Clear previous selection
+    clearRouteSelection();
+
+    // Show route
+    showRoute(routeId);
+
+    // Show path to nearest stop (NEW!)
+    showPathToNearestStop(routeId);
+
+    // Send tracking request to server
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'track-bus',
+            data: { busId: busId }
+        }));
+    }
+
+    // Update UI to show tracking status
+    updateTrackingStatus(busId, routeId);
+};
+
+/**
+ * Update selectBusRoute to also show path
+ */
+const originalSelectBusRoute = window.selectBusRoute;
+window.selectBusRoute = function(routeId) {
+    // Call original function
+    if (originalSelectBusRoute) {
+        originalSelectBusRoute(routeId);
+    }
+
+    // Show path to nearest stop
+    showPathToNearestStop(routeId);
+};
+
+// Also update when bus cards are clicked
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for bus list to be generated
+    setTimeout(() => {
+        document.querySelectorAll('.bus-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Don't trigger if clicking the track button
+                if (!e.target.closest('.track-bus-btn')) {
+                    const routeId = this.getAttribute('data-route-id');
+                    if (routeId) {
+                        showPathToNearestStop(routeId);
+                    }
+                }
+            });
+        });
+    }, 2000);
+});
+
 // Handle contact form submission
 function handleContactFormSubmit() {
     const form = document.getElementById('contact-form');
@@ -1019,7 +1709,42 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+// Add to your existing script.js
+function integrateChatbot() {
+    // Make chatbot functions available globally
+    window.openBusChatbot = function(busNumber) {
+        if (window.citybusChatbot) {
+            window.citybusChatbot.openChatbot();
+            setTimeout(() => {
+                window.askChatbot(`Where is bus ${busNumber}?`);
+            }, 300);
+        }
+    };
 
+    // Add chatbot help to navigation
+    const helpLink = document.createElement('a');
+    helpLink.href = '#';
+    helpLink.className = 'nav-item nav-link';
+    helpLink.innerHTML = '<i class="nav-icon fas fa-robot"></i><span class="nav-text">AI Assistant</span>';
+    helpLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.citybusChatbot) {
+            window.citybusChatbot.openChatbot();
+        }
+    });
+
+    // Add to navigation menu
+    const navMenu = document.querySelector('.nav-menu');
+    if (navMenu) {
+        navMenu.appendChild(helpLink);
+    }
+}
+
+// Call this function in your DOMContentLoaded event
+document.addEventListener('DOMContentLoaded', () => {
+    // ... your existing code ...
+    integrateChatbot();
+});
 // Handle page resize
 window.addEventListener('resize', () => {
     if (trackingMap) {

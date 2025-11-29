@@ -1,5 +1,5 @@
 server:
-  port: 8089  # Changed from 8080 to 8089 as requested
+  port: 8088 # Changed from 8080 to 8089 as requested
 
 spring:
   application:

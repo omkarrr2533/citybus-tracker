@@ -42,7 +42,36 @@ public class BusTrackingWebSocketHandler implements WebSocketHandler {
                 "timestamp", System.currentTimeMillis()
         ));
     }
+// Add this method to handle ETA requests
 
+    private void handleRequestETA(WebSocketSession session, JsonNode jsonNode) throws IOException {
+        JsonNode data = jsonNode.get("data");
+        if (data != null && data.has("coords")) {
+            JsonNode coordsNode = data.get("coords");
+            if (coordsNode.isArray() && coordsNode.size() >= 2) {
+                double userLat = coordsNode.get(0).asDouble();
+                double userLng = coordsNode.get(1).asDouble();
+
+                String busId = data.has("busId") ? data.get("busId").asText() : null;
+
+                if (busId != null) {
+                    // Get ETA for specific bus
+                    Map<String, Object> etaInfo = busTrackingService.calculateBusETA(
+                            busId, userLat, userLng
+                    );
+                    sendMessage(session, "eta-response", etaInfo);
+                } else {
+                    // Get ETA for all buses
+                    List<Map<String, Object>> allETAs = busTrackingService.getAllBusETAs(
+                            userLat, userLng
+                    );
+                    sendMessage(session, "all-etas-response", allETAs);
+                }
+            }
+        }
+    }
+
+    // Update handleMessage method to include the new case:
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
         try {
@@ -77,6 +106,9 @@ public class BusTrackingWebSocketHandler implements WebSocketHandler {
                 case "track-bus":
                     handleTrackBus(session, jsonNode);
                     break;
+                case "request-eta":  // NEW CASE
+                    handleRequestETA(session, jsonNode);
+                    break;
                 case "ping":
                     handlePing(session);
                     break;
@@ -86,6 +118,55 @@ public class BusTrackingWebSocketHandler implements WebSocketHandler {
         } catch (Exception e) {
             System.err.println("Error handling WebSocket message: " + e.getMessage());
             sendErrorMessage(session, "Error processing message: " + e.getMessage());
+        }
+    }
+
+    // Add automatic ETA broadcasts when bus location updates
+    private void broadcastLocationUpdate(Map<String, Object> driverInfo) {
+        if (!Boolean.TRUE.equals(driverInfo.get("visible"))) return;
+
+        Map<String, Object> locationData = new HashMap<>();
+        locationData.put("driverId", driverInfo.get("driverId"));
+        locationData.put("busId", driverInfo.get("busId"));
+        locationData.put("coords", driverInfo.get("coords"));
+        locationData.put("timestamp", System.currentTimeMillis());
+
+        // Broadcast to all users with ETA calculation
+        broadcastToUsersWithETA(locationData);
+
+        // Broadcast to other drivers
+        broadcastToOtherDrivers("driver-location-update", locationData, (String) driverInfo.get("driverId"));
+    }
+
+    private void broadcastToUsersWithETA(Map<String, Object> locationData) {
+        String busId = (String) locationData.get("busId");
+        double[] busCoords = (double[]) locationData.get("coords");
+
+        for (Map.Entry<String, Map<String, Object>> entry : activeUsers.entrySet()) {
+            Map<String, Object> userInfo = entry.getValue();
+            String sessionId = (String) userInfo.get("sessionId");
+            WebSocketSession session = sessions.get(sessionId);
+
+            if (session != null && session.isOpen()) {
+                try {
+                    // Calculate ETA if user has location
+                    double[] userCoords = (double[]) userInfo.get("coords");
+                    if (userCoords != null && userCoords.length >= 2) {
+                        Map<String, Object> etaInfo = busTrackingService.calculateBusETA(
+                                busId, userCoords[0], userCoords[1]
+                        );
+
+                        Map<String, Object> updateWithETA = new HashMap<>(locationData);
+                        updateWithETA.put("eta", etaInfo);
+
+                        sendMessage(session, "bus-location-update-with-eta", updateWithETA);
+                    } else {
+                        sendMessage(session, "bus-location-update", locationData);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Failed to send message to user: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -302,21 +383,6 @@ public class BusTrackingWebSocketHandler implements WebSocketHandler {
         sendMessage(session, "active-buses", activeBuses);
     }
 
-    private void broadcastLocationUpdate(Map<String, Object> driverInfo) {
-        if (!Boolean.TRUE.equals(driverInfo.get("visible"))) return;
-
-        Map<String, Object> locationData = new HashMap<>();
-        locationData.put("driverId", driverInfo.get("driverId"));
-        locationData.put("busId", driverInfo.get("busId"));
-        locationData.put("coords", driverInfo.get("coords"));
-        locationData.put("timestamp", System.currentTimeMillis());
-
-        // Broadcast to all users
-        broadcastToUsers("bus-location-update", locationData);
-
-        // Broadcast to other drivers
-        broadcastToOtherDrivers("driver-location-update", locationData, (String) driverInfo.get("driverId"));
-    }
 
     private void broadcastToUsers(String messageType, Object data) {
         for (Map.Entry<String, Map<String, Object>> entry : activeUsers.entrySet()) {
@@ -453,6 +519,7 @@ public class BusTrackingWebSocketHandler implements WebSocketHandler {
             }
             return false;
         });
+
 
         // Clean up inactive users
         activeUsers.entrySet().removeIf(entry -> {

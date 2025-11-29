@@ -21,4 +21,5 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(webSocketHandler, "/websocket")
                 .setAllowedOrigins("*");
     }
+
 }

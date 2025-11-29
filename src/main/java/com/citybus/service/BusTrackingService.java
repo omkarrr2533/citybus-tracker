@@ -46,7 +46,6 @@ public class BusTrackingService {
                         new Stop("Paithan RD", new double[] { 19.827377, 75.289950 }),
                         new Stop("csmss", new double[] { 19.832516, 75.290357 }))));
 
-        // Add other routes similarly...
         routes.put("2", new Route("Fame Tapadia Signal",
                 Arrays.asList(
                         new double[] { 19.883575, 75.365027 },
@@ -158,5 +157,63 @@ public class BusTrackingService {
         }
 
         return notifications;
+    }
+
+    /**
+     * Calculate ETA for a specific bus to reach a user location
+     */
+    public Map<String, Object> calculateBusETA(String busId, double userLat, double userLng) {
+        Map<String, Object> etaInfo = new HashMap<>();
+
+        BusLocation busLocation = busLocations.get(busId);
+        if (busLocation == null || busLocation.getCoords() == null) {
+            etaInfo.put("available", false);
+            etaInfo.put("message", "Bus location not available");
+            return etaInfo;
+        }
+
+        double[] busCoords = busLocation.getCoords();
+        double distance = DistanceCalculator.getDistanceFromLatLonInKm(
+                userLat, userLng,
+                busCoords[0], busCoords[1]
+        );
+
+        int etaMinutes = DistanceCalculator.calculateETAMinutes(distance);
+        String formattedETA = DistanceCalculator.getFormattedETA(distance);
+
+        etaInfo.put("available", true);
+        etaInfo.put("busId", busId);
+        etaInfo.put("distanceKm", Math.round(distance * 100.0) / 100.0);
+        etaInfo.put("etaMinutes", etaMinutes);
+        etaInfo.put("formattedETA", formattedETA);
+        etaInfo.put("busLocation", new double[]{busCoords[0], busCoords[1]});
+        etaInfo.put("userLocation", new double[]{userLat, userLng});
+        etaInfo.put("timestamp", System.currentTimeMillis());
+
+        return etaInfo;
+    }
+
+    /**
+     * Get ETA information for all active buses relative to a user location
+     */
+    public List<Map<String, Object>> getAllBusETAs(double userLat, double userLng) {
+        List<Map<String, Object>> allETAs = new ArrayList<>();
+
+        for (Map.Entry<String, BusLocation> entry : busLocations.entrySet()) {
+            String busId = entry.getKey();
+            Map<String, Object> etaInfo = calculateBusETA(busId, userLat, userLng);
+            if ((Boolean) etaInfo.get("available")) {
+                allETAs.add(etaInfo);
+            }
+        }
+
+        // Sort by ETA (closest buses first)
+        allETAs.sort((a, b) -> {
+            Integer etaA = (Integer) a.get("etaMinutes");
+            Integer etaB = (Integer) b.get("etaMinutes");
+            return etaA.compareTo(etaB);
+        });
+
+        return allETAs;
     }
 }
