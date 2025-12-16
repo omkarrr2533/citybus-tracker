@@ -37,7 +37,7 @@
     --primary-dark-dark: #e74c3c;      /* Darker Coral */
     --primary-light-dark: #ff8a80;     /* Light Coral */
     --secondary-dark: #4ecdc4;         /* Turquoise */
-    --secondary-dark-dark: #26a69a;    /* Dark Turquoise */
+    --secondary-dark-dark: #26a69a;     
     --accent-dark: #ffe66d;            /* Sunny Yellow */
     --accent-light-dark: #fff176;      /* Light Yellow */
     --danger-dark: #ff5722;            /* Deep Orange */
@@ -300,8 +300,7 @@ body {
     animation: fadeIn 0.8s ease-out;
     transition: var(--transition);
 }
-
-/* Fresh Particles Background */
+ 
 .particles {
     position: fixed;
     top: 0;
