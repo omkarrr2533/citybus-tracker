@@ -97,8 +97,7 @@ function setupAdvancedInteractions() {
     // Interactive cursor effects
     setupCustomCursor();
 
-    // Sound effects (optional)
-    // setupSoundEffects();
+   
 }
 
 function createMouseFollower() {
@@ -621,7 +620,7 @@ function setupPageTransitions() {
 
 // Weather animation effect (decorative)
 function createWeatherEffects() {
-    if (Math.random() > 0.7) { // 30% chance
+    if (Math.random() > 0.7) {  
         createRainEffect();
     }
 }
